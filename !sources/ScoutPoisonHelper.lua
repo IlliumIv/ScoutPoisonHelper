@@ -1,10 +1,7 @@
 local m_poisonActionStr1 = getLocale()["poisonAction1"]
 local m_poisonActionStr2 = getLocale()["poisonAction2"]
 local m_poisonBuffTargetStr = getLocale()["poisonBuffTarget"]
-
-local m_objParams = nil
 local m_castingNow = false
-
 
 local function GetPoisonBuffInfo(aBuffID)
 	local targetID = avatar.GetTarget()
@@ -15,8 +12,8 @@ local function GetPoisonBuffInfo(aBuffID)
 		return
 	end
 	local buffInfo = aBuffID and object.GetBuffInfo(aBuffID)
-	if buffInfo and buffInfo.isStackable and buffInfo.stackLimit == 12 and buffInfo.name then
-		local buffName = toString(buffInfo.name)
+	if buffInfo and buffInfo.producer.casterId == avatar.GetId() and buffInfo.isStackable and buffInfo.stackLimit == 12 and buffInfo.name then
+		local buffName = userMods.FromWString(buffInfo.name)
 		if buffName == m_poisonBuffTargetStr then
 			return buffInfo
 		end
@@ -24,8 +21,8 @@ local function GetPoisonBuffInfo(aBuffID)
 end
 
 function ActionStartCast(aParams)
-	local actionName = toString(aParams.name)
-	if aParams.name and aParams.progress < aParams.duration 
+	local actionName = userMods.FromWString(aParams.name)
+	if aParams.name and aParams.progress < aParams.duration
 	and (actionName == m_poisonActionStr1 or actionName == m_poisonActionStr2)
 	then
 		if not m_castingNow then
@@ -43,7 +40,7 @@ end
 function CheckCast(aBuffID)
 	local buffInfo = GetPoisonBuffInfo(aBuffID)
 
-	if buffInfo and buffInfo.stackCount > 9 and buffInfo.stackCount ~= 12 then
+	if buffInfo and buffInfo.stackCount == 11 then
 		avatar.StopCasting()
 	end
 end
@@ -60,14 +57,14 @@ function BuffsChanged(aParams)
 				end
 			end
 		end
-	end 
+	end
 end
 
 function Init()
 	common.RegisterEventHandler(ActionStartCast, "EVENT_ACTION_PROGRESS_START")
 	common.RegisterEventHandler(ActionEndCast, "EVENT_ACTION_PROGRESS_FINISH")
 	common.RegisterEventHandler(ActionEndCast, "EVENT_PROCESS_TERMINATED")
-	
+
 	common.RegisterEventHandler(BuffsChanged, "EVENT_OBJECT_BUFFS_ELEMENT_CHANGED")
 end
 
